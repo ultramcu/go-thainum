@@ -34,6 +34,52 @@ func TestThaiDate(t *testing.T) {
 	}
 }
 
+func TestParseDate(t *testing.T) {
+	want := time.Date(2024, time.June, 5, 0, 0, 0, 0, time.UTC)
+	inputs := []string{
+		"5 มิถุนายน 2567",
+		"5 มิ.ย. 2567",
+		"วันพุธที่ 5 มิถุนายน พ.ศ. 2567",
+		"๕ มิถุนายน ๒๕๖๗", // Thai digits
+	}
+	for _, in := range inputs {
+		got, err := ParseDate(in)
+		if err != nil {
+			t.Errorf("ParseDate(%q) error: %v", in, err)
+			continue
+		}
+		if !got.Equal(want) {
+			t.Errorf("ParseDate(%q) = %v, want %v", in, got, want)
+		}
+	}
+
+	if _, err := ParseDate("ไม่ใช่วันที่"); err == nil {
+		t.Error("expected error for non-date input")
+	}
+	if _, err := ParseDate("31 กุมภาพันธ์ 2567"); err == nil {
+		t.Error("expected error for invalid 31 February")
+	}
+}
+
+func TestDateRoundTrip(t *testing.T) {
+	for _, d := range []time.Time{
+		time.Date(2024, time.June, 5, 0, 0, 0, 0, time.UTC),
+		time.Date(1990, time.January, 1, 0, 0, 0, 0, time.UTC),
+		time.Date(2030, time.December, 31, 0, 0, 0, 0, time.UTC),
+	} {
+		for _, s := range []string{FormatDate(d), FormatDateAbbr(d), FormatDateFull(d)} {
+			got, err := ParseDate(s)
+			if err != nil {
+				t.Errorf("round-trip ParseDate(%q) error: %v", s, err)
+				continue
+			}
+			if !got.Equal(d) {
+				t.Errorf("round-trip %q = %v, want %v", s, got, d)
+			}
+		}
+	}
+}
+
 func TestThaiDateAllMonthsWeekdays(t *testing.T) {
 	if MonthTH(time.January) != "มกราคม" || MonthTH(time.December) != "ธันวาคม" {
 		t.Error("month bounds wrong")

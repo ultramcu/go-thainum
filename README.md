@@ -154,6 +154,23 @@ fmt.Println(thainum.BuddhistYear(d))        // 2567
 Dates use the Buddhist-Era year (Gregorian + 543). Wrap the result with
 `ToThaiDigits` if you want Thai numerals (e.g. `๕ มิถุนายน ๒๕๖๗`).
 
+Parse a Thai date string back into a `time.Time` (accepts any `FormatDate*` form,
+Arabic or Thai digits, Buddhist-Era year):
+
+```go
+d, err := thainum.ParseDate("วันพุธที่ 5 มิถุนายน พ.ศ. 2567")
+// time.Date(2024, time.June, 5, ...)
+```
+
+### Time of day and durations
+
+```go
+t := time.Date(2024, 1, 1, 14, 30, 0, 0, time.UTC)
+fmt.Println(thainum.FormatTime(t))  // สิบสี่นาฬิกาสามสิบนาที (formal)
+fmt.Println(thainum.FormatClock(t)) // บ่ายสองโมงครึ่ง (colloquial)
+fmt.Println(thainum.FormatDuration(90 * time.Minute)) // หนึ่งชั่วโมงสามสิบนาที
+```
+
 ### Money from a float
 
 `BahtFromFloat` (and the `SatangFromFloat` helper) convert a float baht amount to

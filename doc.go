@@ -1,7 +1,8 @@
 // Package thainum is a toolkit for Thai numbers: it converts between Arabic and
 // Thai digits, spells numbers out as Thai words, renders Thai Baht text
-// (บาทไทย), formats money, formats Thai dates (Buddhist-Era year with Thai month
-// and weekday names), and parses Thai number words back into integers.
+// (บาทไทย), formats money, formats Thai dates and times (Buddhist-Era year with
+// Thai month and weekday names; formal and colloquial clock; durations), parses
+// Thai dates back into time.Time, and parses Thai number words back into integers.
 //
 // Everything is pure Go with no dependencies (the optional decimaladapter
 // subpackage adds shopspring/decimal for callers who want it).

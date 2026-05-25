@@ -2,6 +2,8 @@ package thainum
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -76,4 +78,74 @@ func FormatDateAbbr(t time.Time) string {
 func FormatDateFull(t time.Time) string {
 	return fmt.Sprintf("%sที่ %d %s พ.ศ. %d",
 		WeekdayTH(t.Weekday()), t.Day(), MonthTH(t.Month()), BuddhistYear(t))
+}
+
+// monthLookup maps every Thai month name (full and abbreviated) to its month,
+// ordered by descending length so the longest match wins.
+type monthName struct {
+	name string
+	m    time.Month
+}
+
+var monthNames = func() []monthName {
+	var out []monthName
+	for i := time.January; i <= time.December; i++ {
+		out = append(out, monthName{thaiMonths[i], i}, monthName{thaiMonthsAbbr[i], i})
+	}
+	sort.Slice(out, func(a, b int) bool { return len(out[a].name) > len(out[b].name) })
+	return out
+}()
+
+// ParseDate parses a Thai date string back into a time.Time (at midnight UTC).
+// It accepts the forms produced by FormatDate, FormatDateAbbr and
+// FormatDateFull — e.g. "5 มิถุนายน 2567", "5 มิ.ย. 2567" and
+// "วันพุธที่ 5 มิถุนายน พ.ศ. 2567" — with Arabic or Thai digits. The year is
+// interpreted as a Buddhist-Era year (converted to CE with −543).
+func ParseDate(s string) (time.Time, error) {
+	norm := ToArabicDigits(s)
+
+	var mon time.Month
+	for _, mn := range monthNames {
+		if strings.Contains(norm, mn.name) {
+			mon = mn.m
+			break
+		}
+	}
+	if mon == 0 {
+		return time.Time{}, fmt.Errorf("thainum: no Thai month found in %q", s)
+	}
+
+	nums := digitGroups(norm)
+	if len(nums) < 2 {
+		return time.Time{}, fmt.Errorf("thainum: need a day and a year in %q", s)
+	}
+	day := nums[0]
+	be := nums[len(nums)-1]
+	ce := be - 543
+
+	res := time.Date(ce, mon, day, 0, 0, 0, 0, time.UTC)
+	// time.Date normalizes out-of-range values; reject anything that shifted.
+	if res.Year() != ce || res.Month() != mon || res.Day() != day {
+		return time.Time{}, fmt.Errorf("thainum: invalid date in %q", s)
+	}
+	return res, nil
+}
+
+// digitGroups returns each run of ASCII digits in s as an int.
+func digitGroups(s string) []int {
+	var out []int
+	i := 0
+	for i < len(s) {
+		if s[i] < '0' || s[i] > '9' {
+			i++
+			continue
+		}
+		n := 0
+		for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+			n = n*10 + int(s[i]-'0')
+			i++
+		}
+		out = append(out, n)
+	}
+	return out
 }
