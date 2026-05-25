@@ -139,6 +139,21 @@ fmt.Println(thainum.Year(2566))        // พุทธศักราชสอ�
 fmt.Println(thainum.CEToBE(2023))      // 2566
 ```
 
+### Thai dates (เดือนไทย / วันไทย / ปี พ.ศ.)
+
+```go
+d := time.Date(2024, time.June, 5, 0, 0, 0, 0, time.UTC)
+fmt.Println(thainum.FormatDate(d))     // 5 มิถุนายน 2567
+fmt.Println(thainum.FormatDateAbbr(d)) // 5 มิ.ย. 2567
+fmt.Println(thainum.FormatDateFull(d)) // วันพุธที่ 5 มิถุนายน พ.ศ. 2567
+fmt.Println(thainum.MonthTH(time.June))     // มิถุนายน
+fmt.Println(thainum.WeekdayTH(time.Sunday)) // วันอาทิตย์
+fmt.Println(thainum.BuddhistYear(d))        // 2567
+```
+
+Dates use the Buddhist-Era year (Gregorian + 543). Wrap the result with
+`ToThaiDigits` if you want Thai numerals (e.g. `๕ มิถุนายน ๒๕๖๗`).
+
 ### Money from a float
 
 `BahtFromFloat` (and the `SatangFromFloat` helper) convert a float baht amount to

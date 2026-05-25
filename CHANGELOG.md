@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Thai dates** — `MonthTH`/`MonthAbbrTH` (มกราคม / ม.ค.), `WeekdayTH`/
+  `WeekdayAbbrTH` (วันอาทิตย์ / อา.), `BuddhistYear(time.Time)` (+543), and
+  `FormatDate`/`FormatDateAbbr`/`FormatDateFull` that render a `time.Time` as a
+  Thai date with the Buddhist-Era year (e.g. "วันพุธที่ 5 มิถุนายน พ.ศ. 2567").
+
 ## [0.2.0] - 2026-05-25
 
 ### Added
