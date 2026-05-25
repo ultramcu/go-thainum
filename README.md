@@ -5,6 +5,7 @@
 **A comprehensive Thai number toolkit for Go — Thai numerals, number-to-words, baht text, formatting, and (uniquely) reverse parsing of Thai words back into numbers.**
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/ultramcu/go-thainum.svg)](https://pkg.go.dev/github.com/ultramcu/go-thainum)
+[![Release](https://img.shields.io/github/v/release/ultramcu/go-thainum?sort=semver)](https://github.com/ultramcu/go-thainum/releases)
 [![CI](https://github.com/ultramcu/go-thainum/actions/workflows/ci.yml/badge.svg)](https://github.com/ultramcu/go-thainum/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ultramcu/go-thainum)](https://goreportcard.com/report/github.com/ultramcu/go-thainum)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
