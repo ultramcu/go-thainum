@@ -23,6 +23,9 @@ Pure Go, MIT-licensed, **zero external dependencies** in the core (stdlib only),
 - **Baht text (บาทตัวอักษร)** — render currency amounts as the formal Thai spelling used on cheques and invoices.
 - **Formatting** — thousands separators, satang-to-decimal, and a `฿` Thai Baht display format.
 - **Reverse parsing (the flagship feature)** — turn Thai words *back* into numbers and satang. Effectively nothing else in the Go ecosystem does this.
+- **Ordinals, fractions & Buddhist-Era years** — `Ordinal` (ที่…), `Fraction` (เศษ…ส่วน…), `Year` (พุทธศักราช…), plus `CEToBE`/`BEToCE` converters.
+- **Thai dates** — Thai month and weekday names, Buddhist-Era year, `FormatDate`/`FormatDateAbbr`/`FormatDateFull`, and `ParseDate` to turn a Thai date string *back* into a `time.Time` (round-trips the formatters).
+- **Thai time & durations** — `FormatTime` (formal นาฬิกา) and `FormatClock` (colloquial ตี / โมง / ทุ่ม), plus `FormatDuration` (วัน/ชั่วโมง/นาที/วินาที).
 - **Money is exact** — amounts are handled in integer **satang** (1 baht = 100 satang) or `math/big`, **never `float64`**, so there are no rounding surprises. A clearly-labelled lossy float entry point exists for convenience.
 - **EtMode** — choose between the Royal-Institute-recommended `เอ็ด` form and the plain `หนึ่ง` form for trailing ones.
 - **Optional `decimaladapter` subpackage** — adds [`shopspring/decimal`](https://github.com/shopspring/decimal) support. Only callers who import the subpackage pull that dependency; the core stays dependency-free.
