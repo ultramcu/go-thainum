@@ -7,6 +7,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/ultramcu/go-thainum.svg)](https://pkg.go.dev/github.com/ultramcu/go-thainum)
 [![Release](https://img.shields.io/github/v/release/ultramcu/go-thainum?sort=semver)](https://github.com/ultramcu/go-thainum/releases)
 [![CI](https://github.com/ultramcu/go-thainum/actions/workflows/ci.yml/badge.svg)](https://github.com/ultramcu/go-thainum/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ultramcu/go-thainum/graph/badge.svg)](https://codecov.io/gh/ultramcu/go-thainum)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ultramcu/go-thainum)](https://goreportcard.com/report/github.com/ultramcu/go-thainum)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
