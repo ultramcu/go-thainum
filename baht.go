@@ -1,8 +1,8 @@
 package thainum
 
 import (
+	"math"
 	"math/big"
-	"strconv"
 )
 
 // Baht renders a whole-baht amount as Thai Baht text, using the default EtMode.
@@ -119,9 +119,20 @@ func (sp Speller) BahtFromString(amount string) (string, error) {
 }
 
 // BahtFromFloat renders a float baht amount (lossy; see the package-level doc).
+// It converts the amount to satang via SatangFromFloat and then defers to
+// BahtSatang.
 func (sp Speller) BahtFromFloat(amount float64) string {
-	out, _ := sp.BahtFromString(strconv.FormatFloat(amount, 'f', 2, 64))
-	return out
+	return sp.BahtSatang(SatangFromFloat(amount))
+}
+
+// SatangFromFloat converts a baht amount given as a float64 into satang,
+// rounding to the nearest satang (half away from zero). Float money is
+// inherently imprecise; prefer integer satang or BahtFromString for exact input.
+//
+//	SatangFromFloat(21.21) // 2121
+//	SatangFromFloat(0.5)   // 50
+func SatangFromFloat(baht float64) int64 {
+	return int64(math.Round(baht * 100))
 }
 
 // parseToSatang converts a decimal baht string to a non-negative satang

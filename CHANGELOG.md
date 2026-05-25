@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-25
+
+### Added
+
+- **Ordinals** — `Ordinal(int64)` ("ที่" + the number; e.g. 21 → "ที่ยี่สิบเอ็ด").
+- **Fractions** — `Fraction(num, den int64)` ("เศษ" num "ส่วน" den;
+  e.g. 3/4 → "เศษสามส่วนสี่").
+- **Buddhist-Era years** — `Year(be int64)` ("พุทธศักราช" + the number) plus
+  `CEToBE`/`BEToCE` year converters (±543).
+- **`SatangFromFloat(float64) int64`** — convert a float baht amount to satang
+  (rounded half away from zero), exposing the float→satang→`BahtSatang` path.
+- All of the above are also available as `Speller` methods, honouring `EtMode`.
+
+### Changed
+
+- `BahtFromFloat` now converts via `SatangFromFloat` (float → satang int64) and
+  defers to `BahtSatang`, instead of formatting through a string.
+
 ## [0.1.0] - 2026-05-25
 
 ### Added

@@ -129,6 +129,26 @@ fmt.Println(satang) // 2121
 
 `ParseBig(words string) (*big.Int, error)` handles arbitrarily large values. All parse errors wrap the sentinel `ErrParse`, so you can match them with `errors.Is(err, thainum.ErrParse)`.
 
+### Ordinals, fractions, and Buddhist-Era years
+
+```go
+fmt.Println(thainum.Ordinal(21))       // ที่ยี่สิบเอ็ด
+fmt.Println(thainum.Fraction(3, 4))    // เศษสามส่วนสี่
+fmt.Println(thainum.Year(2566))        // พุทธศักราชสองพันห้าร้อยหกสิบหก
+fmt.Println(thainum.CEToBE(2023))      // 2566
+```
+
+### Money from a float
+
+`BahtFromFloat` (and the `SatangFromFloat` helper) convert a float baht amount to
+satang and reuse `BahtSatang`. Float money is lossy — prefer `BahtSatang`
+(satang) or `BahtFromString` for exact input.
+
+```go
+fmt.Println(thainum.SatangFromFloat(21.21)) // 2121
+fmt.Println(thainum.BahtFromFloat(21.21))   // ยี่สิบเอ็ดบาทยี่สิบเอ็ดสตางค์
+```
+
 ### EtMode — `เอ็ด` vs `หนึ่ง`
 
 By default the library uses `EtAlways`, the Royal-Institute-recommended form where a trailing one is read `เอ็ด`. Use `EtTensOnly` if you want a trailing one to read `หนึ่ง` except in the tens place:
