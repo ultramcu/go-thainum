@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-30
+
+Brings go-thainum to full feature parity with the Dart sibling
+[`thainum`](https://pub.dev/packages/thainum) 0.5.3. All additions are
+backward-compatible (new options are variadic; existing calls are unchanged).
+
+### Added
+
+- **Digit speaking** — `SpeakDigits` / `DigitSpeaker` (read a number out digit
+  by digit, optional separator and colloquial โท).
+- **Lottery** — `SpeakLotteryNumber`, `SpeakTwoDigit`, `SpeakThreeDigit`,
+  `IsLotteryDrawDate`, `LotteryDrawDates`.
+- **Phone** — `ThaiPhoneKind`, `FormatThaiPhone`, `NormalizeThaiPhone`,
+  `SpeakThaiPhone` (+ `PhoneKind`).
+- **Thai national ID** — `ParseThaiID`, `IsValidThaiID`, `IsValidThaiTaxID`,
+  `FormatThaiID`, `ClassifyThaiID`, `SpeakThaiID` (mod-11 checksum).
+- **Percent** — `Percent`, `PercentInt`, `FormatPercent` (+ `PercentStyle`).
+- **Abbreviated magnitudes** — `SpellShort`, `SpellShortBig`, `FormatShort`,
+  `FormatShortBig` (พัน/หมื่น/แสน/ล้าน, e.g. "1.5 ล้าน").
+- **Qualifiers** — `ThaiApprox`, `ThaiNearly`, `ThaiRange`, `ThaiMoreThan`,
+  `IsRoundMagnitude` (+ `QualifierKind`).
+- **Idioms** — `QuantityWord`, `QuantityValue`, `ParseQuantity`,
+  `ParseHalfBaht` (+ `QuantityUnit`).
+- **Number extraction** — `ExtractNumbers(text) []NumberMatch` (maximal-munch
+  scan of digit runs and Thai word-runs with byte offsets).
+- **Decimal parsing** — `ParseDecimal` (inverse of `SpellDecimal`).
+- **Parse options** — `Strict()`, `Lenient()`, `AllowColloquial()` accepted as
+  trailing `...ParseOption` by `ParseInt`/`ParseBig`/`ParseBaht`/`ParseDecimal`.
+- **`IsDigits`** helper.
+- **Satang rounding** — `SatangRounding` (`RoundHalfAwayFromZero` default,
+  `RoundHalfEven`, `RoundTruncate`, `RoundCeil`, `RoundFloor`) as an optional
+  trailing argument to `BahtFromString`. Float-free; default output unchanged.
+- **`money` subpackage** — typed `Baht`, `Satang`, `BahtBigInt`, `SatangBigInt`
+  value types with ordering and JSON marshalling (make the baht/satang unit a
+  compile-time guarantee).
+- **CLI** — `cmd/thainum` (`spell`, `baht`, `parse`, `digits`, `date`
+  subcommands with `--et`/`--json`/`--full`; stdlib-only).
+
 ## [0.3.2] - 2026-05-25
 
 ### Added
