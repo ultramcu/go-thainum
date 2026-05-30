@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-30
+
+### Changed
+
+- Documentation only: the README now documents all v0.4.0 features (digit
+  reading, lottery, phone, Thai national ID, percent, abbreviated magnitudes,
+  qualifiers, idioms, number extraction, decimal parsing, parse options,
+  satang rounding, the `money` subpackage, and the CLI). No code changes.
+
 ## [0.4.0] - 2026-05-30
 
 Brings go-thainum to full feature parity with the Dart sibling
