@@ -122,7 +122,7 @@ func TestIsDigits(t *testing.T) {
 }
 
 func TestParseDecimal_RoundTripsSpellDecimal(t *testing.T) {
-	for _, x := range []string{"1.5", "0.05", "123.45", "12.34", "0.5"} {
+	for _, x := range []string{"1.5", "0.05", "123.45", "12.34", "0.5", "-3.14"} {
 		words, err := SpellDecimal(x)
 		if err != nil {
 			t.Fatalf("SpellDecimal(%q) error: %v", x, err)

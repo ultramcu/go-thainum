@@ -16,6 +16,7 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -154,12 +155,14 @@ func dispatch(cmd string, rest []string, flags map[string]string) (label, value 
 			return "", "", err
 		}
 		// Lenient so multiple shell tokens joined with spaces (e.g.
-		// "parse ยี่สิบ เอ็ด") parse as one number.
-		v, perr := thainum.ParseBig(words, thainum.Lenient())
+		// "parse ยี่สิบ เอ็ด") parse as one number. ParseDecimal mirrors
+		// Dart's parseDecimal: it also reads a จุด-separated fractional part
+		// (e.g. "สิบสองจุดสามสี่" -> "12.34") and returns a decimal string.
+		v, perr := thainum.ParseDecimal(words, thainum.Lenient())
 		if perr != nil {
 			return "", "", perr
 		}
-		return "value", v.String(), nil
+		return "value", v, nil
 	case "digits":
 		raw, err := requireOne(rest, "digits <int>")
 		if err != nil {
@@ -228,16 +231,37 @@ func requireBigInt(rest []string, form string) (*big.Int, error) {
 // (e.g. 2024-02-31). Mirrors Dart's _parseIsoDate.
 func parseISODate(s string) (time.Time, error) {
 	s = strings.TrimSpace(s)
-	d, err := time.Parse("2006-01-02", s)
-	if err != nil {
+	// Shape gate first (mirrors Dart's YYYY-MM-DD regex): a malformed shape is a
+	// "format" error, separate from a well-formed but non-calendar date.
+	if !isISODateShape(s) {
 		return time.Time{}, &cliError{fmt.Sprintf("expected a date as YYYY-MM-DD, got %q", s), 64}
 	}
-	// time.Parse normalizes out-of-range fields silently? No: with this layout
-	// it rejects them, but guard anyway by re-formatting and comparing.
-	if d.Format("2006-01-02") != s {
+	y, _ := strconv.Atoi(s[0:4])
+	m, _ := strconv.Atoi(s[5:7])
+	dd, _ := strconv.Atoi(s[8:10])
+	d := time.Date(y, time.Month(m), dd, 0, 0, 0, 0, time.UTC)
+	// time.Date normalizes out-of-range fields (e.g. Feb 31 -> Mar 2); if any
+	// component changed, the input was not a real calendar date.
+	if d.Year() != y || int(d.Month()) != m || d.Day() != dd {
 		return time.Time{}, &cliError{fmt.Sprintf("not a valid calendar date: %q", s), 64}
 	}
 	return d, nil
+}
+
+// isISODateShape reports whether s is exactly "DDDD-DD-DD" (ASCII digits).
+func isISODateShape(s string) bool {
+	if len(s) != 10 || s[4] != '-' || s[7] != '-' {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if i == 4 || i == 7 {
+			continue
+		}
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // formatValue renders the (label, value) result either as bare text or as a
