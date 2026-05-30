@@ -90,8 +90,11 @@ func buildWordTable() []wordEntry {
 //
 // Thai or Arabic digit characters are also accepted (ParseInt("๒๑") == 21).
 // Overflow of int64 returns an error suggesting ParseBig.
-func ParseInt(words string) (int64, error) {
-	b, err := ParseBig(words)
+//
+// Trailing ParseOption values (Strict, Lenient, AllowColloquial) tune the
+// behaviour; with no options the result is identical to the historic parser.
+func ParseInt(words string, opts ...ParseOption) (int64, error) {
+	b, err := ParseBig(words, opts...)
 	if err != nil {
 		return 0, err
 	}
@@ -105,8 +108,14 @@ func ParseInt(words string) (int64, error) {
 //
 //	ParseBig("หนึ่งล้านล้าน")      // 10^12
 //	ParseBig("หนึ่งล้านล้านล้าน")  // 10^18
-func ParseBig(words string) (*big.Int, error) {
+//
+// See ParseInt for the Strict, Lenient and AllowColloquial options.
+func ParseBig(words string, opts ...ParseOption) (*big.Int, error) {
+	o := applyOptions(opts)
 	s := strings.TrimSpace(ToArabicDigits(words))
+	if o.lenient {
+		s = normalizeLenient(s)
+	}
 	if s == "" {
 		return nil, fmt.Errorf("%w: empty input", ErrParse)
 	}
@@ -126,11 +135,11 @@ func ParseBig(words string) (*big.Int, error) {
 		}
 	}
 
-	toks, err := tokenize(s)
+	toks, err := tokenize(s, wordTable(o.allowColloquial))
 	if err != nil {
 		return nil, err
 	}
-	v, err := evalTokens(toks)
+	v, err := evalTokens(toks, o.strict)
 	if err != nil {
 		return nil, err
 	}
@@ -161,11 +170,11 @@ func parsePlainDigits(s string) (*big.Int, bool) {
 // tokenize splits a sign-free Thai number string into recognized tokens using a
 // greedy longest-match scan. Any unrecognized run yields an ErrParse with the
 // offending substring as context.
-func tokenize(s string) ([]token, error) {
+func tokenize(s string, table []wordEntry) ([]token, error) {
 	var toks []token
 	for len(s) > 0 {
 		matched := false
-		for _, e := range numberWords {
+		for _, e := range table {
 			if strings.HasPrefix(s, e.word) {
 				toks = append(toks, e.tok())
 				s = s[len(e.word):]
@@ -199,7 +208,7 @@ func tokenize(s string) ([]token, error) {
 // Within a group, pending holds a units digit (1..9) seen but not yet attached
 // to a place; a place word multiplies the pending digit (default 1) into current
 // at that place. At the very end the final (scale 10^0) group is added.
-func evalTokens(toks []token) (*big.Int, error) {
+func evalTokens(toks []token, strict bool) (*big.Int, error) {
 	result := big.NewInt(0)
 	current := big.NewInt(0)
 
@@ -274,15 +283,23 @@ func evalTokens(toks []token) (*big.Int, error) {
 			place := tk.val
 			digit := int64(1)
 			isYi := false
+			hadPending := false
 			if pending >= 0 {
 				digit = pending
 				isYi = pendingYi
+				hadPending = true
 				pending = -1
 				pendingYi = false
 			}
 			// ยี่ is only valid directly before สิบ (ยี่สิบ = 20).
 			if isYi && place != 10 {
 				return nil, fmt.Errorf("%w: %q must be followed by สิบ", ErrParse, "ยี่")
+			}
+			// Strict mode rejects a non-standard tens form: หนึ่งสิบ (digit-1 over
+			// สิบ) or สองสิบ (a plain สอง instead of ยี่). A bare สิบ (no pending
+			// digit, digit defaults to 1) is the canonical form and is allowed.
+			if strict && place == 10 && hadPending && (digit == 1 || (digit == 2 && !isYi)) {
+				return nil, fmt.Errorf("%w: non-standard tens form %q", ErrParse, tk.text)
 			}
 			// Enforce strictly descending places within a group so that
 			// repeats/ascents like "สิบสิบ" or "สิบร้อย" are rejected.
@@ -339,8 +356,17 @@ func evalTokens(toks []token) (*big.Int, error) {
 //	ParseBaht("ศูนย์บาทถ้วน")                 // 0
 //	ParseBaht("ยี่สิบห้าสตางค์")              // 25
 //	ParseBaht("ลบหนึ่งบาทหนึ่งสตางค์")        // -101
-func ParseBaht(text string) (satang int64, err error) {
+//
+// See ParseInt for the Strict, Lenient and AllowColloquial options.
+func ParseBaht(text string, opts ...ParseOption) (satang int64, err error) {
+	o := applyOptions(opts)
 	s := strings.TrimSpace(ToArabicDigits(text))
+	// lenient normalizes the whole string here (before the บาท/สตางค์ split), so
+	// the baht/satang parts are already space-free — the inner ParseInt calls
+	// below only need to forward allowColloquial and strict, not lenient.
+	if o.lenient {
+		s = normalizeLenient(s)
+	}
 	if s == "" {
 		return 0, fmt.Errorf("%w: empty input", ErrParse)
 	}
@@ -371,9 +397,17 @@ func ParseBaht(text string) (satang int64, err error) {
 		bahtPart = s
 	}
 
+	innerOpts := []ParseOption{}
+	if o.allowColloquial {
+		innerOpts = append(innerOpts, AllowColloquial())
+	}
+	if o.strict {
+		innerOpts = append(innerOpts, Strict())
+	}
+
 	var bahtVal int64
 	if strings.TrimSpace(bahtPart) != "" {
-		bv, err := ParseInt(bahtPart)
+		bv, err := ParseInt(bahtPart, innerOpts...)
 		if err != nil {
 			return 0, fmt.Errorf("%w (baht part)", err)
 		}
@@ -382,7 +416,7 @@ func ParseBaht(text string) (satang int64, err error) {
 
 	var satVal int64
 	if strings.TrimSpace(satPart) != "" {
-		sv, err := ParseInt(satPart)
+		sv, err := ParseInt(satPart, innerOpts...)
 		if err != nil {
 			return 0, fmt.Errorf("%w (satang part)", err)
 		}

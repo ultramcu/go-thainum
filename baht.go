@@ -30,9 +30,16 @@ func BahtSatangBig(satang *big.Int) string { return Speller{}.BahtSatangBig(sata
 
 // BahtFromString renders a decimal baht amount written as a string (e.g.
 // "21.21") as Thai Baht text. The fractional part is rounded to two decimal
-// places, away from zero. Because the input is a string, no float rounding is
+// places using the optional rounding mode (default RoundHalfAwayFromZero, the
+// historical behaviour). Because the input is a string, no float rounding is
 // involved.
-func BahtFromString(amount string) (string, error) { return Speller{}.BahtFromString(amount) }
+//
+// The variadic rounding argument is backward-compatible: BahtFromString(s)
+// behaves identically to before. At most one mode is honoured; if several are
+// passed the last one wins. Mirrors Dart bahtFromString(amount, {rounding}).
+func BahtFromString(amount string, rounding ...SatangRounding) (string, error) {
+	return Speller{}.BahtFromString(amount, rounding...)
+}
 
 // BahtFromFloat is a convenience wrapper that renders a float baht amount. It is
 // lossy: the float is formatted to two decimals first. Prefer Baht (whole baht),
@@ -105,9 +112,17 @@ func (sp Speller) bahtParts(baht *big.Int, sat int) string {
 	return out + sp.spellGroup(sat) + "สตางค์"
 }
 
-// BahtFromString renders a decimal baht amount string as Thai Baht text.
-func (sp Speller) BahtFromString(amount string) (string, error) {
-	neg, satang, err := parseToSatang(amount)
+// BahtFromString renders a decimal baht amount string as Thai Baht text,
+// rounding the fractional part to two places with the optional rounding mode
+// (default RoundHalfAwayFromZero). The variadic argument keeps the original
+// single-argument call form working unchanged; if several modes are passed the
+// last one wins.
+func (sp Speller) BahtFromString(amount string, rounding ...SatangRounding) (string, error) {
+	mode := RoundHalfAwayFromZero
+	if len(rounding) > 0 {
+		mode = rounding[len(rounding)-1]
+	}
+	neg, satang, err := parseToSatang(amount, mode)
 	if err != nil {
 		return "", err
 	}
@@ -136,8 +151,10 @@ func SatangFromFloat(baht float64) int64 {
 }
 
 // parseToSatang converts a decimal baht string to a non-negative satang
-// magnitude plus a sign, rounding the fraction to two places away from zero.
-func parseToSatang(amount string) (neg bool, satang *big.Int, err error) {
+// magnitude plus a sign, rounding the fraction to two places with the given
+// rounding mode. All arithmetic is on the digit string (integer big.Int and
+// byte math), so no rounding mode can introduce binary-floating-point error.
+func parseToSatang(amount string, rounding SatangRounding) (neg bool, satang *big.Int, err error) {
 	neg, intPart, frac, err := splitDecimal(amount)
 	if err != nil {
 		return false, nil, err
@@ -148,7 +165,7 @@ func parseToSatang(amount string) (neg bool, satang *big.Int, err error) {
 	}
 	sat := baht.Mul(baht, hundred)
 
-	// Two-decimal satang with away-from-zero rounding on the third digit.
+	// Truncated two-decimal satang magnitude (toward zero), 0..99.
 	cents := 0
 	if len(frac) >= 1 {
 		cents += int(frac[0]-'0') * 10
@@ -156,8 +173,9 @@ func parseToSatang(amount string) (neg bool, satang *big.Int, err error) {
 	if len(frac) >= 2 {
 		cents += int(frac[1] - '0')
 	}
-	if len(frac) >= 3 && frac[2] >= '5' {
-		cents++ // round up
+	// A single +1 increment decided from the discarded tail and the mode.
+	if roundUpDecision(rounding, neg, frac) {
+		cents++
 	}
 	sat.Add(sat, big.NewInt(int64(cents)))
 	return neg, sat, nil
